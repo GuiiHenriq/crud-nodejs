@@ -1,0 +1,44 @@
+services:
+  # --- PostgreSQL Database Service ---
+  postgres-db:
+    image: postgres:14-alpine
+    container_name: user-crud-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: user_crud_db
+    ports:
+      - "5432:5432" # Maps the container port to your local machine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  api:
+    build: . # Builds the image from the Dockerfile in the current directory
+    container_name: user-crud-api
+    restart: always
+    env_file:
+      - .env # Loads environment variables from the .env file
+    environment:
+      - NODE_ENV=production # Sets the Node environment to production
+    ports:
+      - "3000:3000" # Maps the API port to your machine
+    depends_on:
+      - postgres-db # Ensures the database starts before the API
+    command: node dist/server.js # Specific command to start the API
+
+  # --- Our Consumer Service ---
+  consumer:
+    build: . # Reuses the same image built for the API
+    container_name: user-crud-consumer
+    restart: always
+    env_file:
+      - .env # Loads the same environment variables
+    environment:
+      - NODE_ENV=production # Sets the Node environment to production
+    depends_on:
+      - postgres-db # Ensures the database starts before the consumer
+    command: node dist/consumer.js # Specific command to start the consumer
+
+volumes:
+  postgres-data: # Defines a named volume to persist database data
