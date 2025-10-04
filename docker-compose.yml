@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: user_crud_db
     ports:
-      - "5432:5432" # Maps the container port to your local machine
+      - '5432:5432' # Maps the container port to your local machine
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -22,7 +22,7 @@ services:
     environment:
       - NODE_ENV=production # Sets the Node environment to production
     ports:
-      - "3000:3000" # Maps the API port to your machine
+      - '3000:3000' # Maps the API port to your machine
     depends_on:
       - postgres-db # Ensures the database starts before the API
     command: node dist/server.js # Specific command to start the API

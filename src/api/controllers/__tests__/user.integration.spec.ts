@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { app } from '../../../app'; 
+import { app } from '../../../app';
 import { prisma } from '../../../shared/lib/prisma';
 
 describe('POST /api/users', () => {
@@ -17,15 +17,15 @@ describe('POST /api/users', () => {
       email: 'integration@test.com',
     };
 
-    const response = await request(app)
-      .post('/api/users')
-      .send(userData);
+    const response = await request(app).post('/api/users').send(userData);
 
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty('id');
     expect(response.body.name).toBe(userData.name);
 
-    const userInDb = await prisma.user.findUnique({ where: { email: userData.email } });
+    const userInDb = await prisma.user.findUnique({
+      where: { email: userData.email },
+    });
     expect(userInDb).not.toBeNull();
     expect(userInDb?.name).toBe(userData.name);
   });
@@ -36,9 +36,7 @@ describe('POST /api/users', () => {
       email: 'invalid-email',
     };
 
-    const response = await request(app)
-      .post('/api/users')
-      .send(userData);
+    const response = await request(app).post('/api/users').send(userData);
 
     expect(response.status).toBe(400);
 

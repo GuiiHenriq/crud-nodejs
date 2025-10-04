@@ -6,15 +6,18 @@ import { Channel } from 'amqplib';
 jest.mock('../../repositories/user.repository');
 jest.mock('../../shared/lib/rabbitmq');
 
-const mockedUserRepository = userRepository as jest.Mocked<typeof userRepository>;
-const mockedRabbitmqConnection = rabbitmqConnection as jest.Mocked<typeof rabbitmqConnection>;
+const mockedUserRepository = userRepository as jest.Mocked<
+  typeof userRepository
+>;
+const mockedRabbitmqConnection = rabbitmqConnection as jest.Mocked<
+  typeof rabbitmqConnection
+>;
 
 const mockChannel = {
   assertQueue: jest.fn(),
   sendToQueue: jest.fn(),
   close: jest.fn(),
 } as unknown as jest.Mocked<Channel>;
-
 
 describe('User Service', () => {
   beforeEach(() => {
@@ -31,10 +34,16 @@ describe('User Service', () => {
     it('should create a new user and send a notification when email is not in use', async () => {
       const name = 'Test User';
       const email = 'test@example.com';
-      const mockNewUser = { id: 'uuid-123', name, email, createdAt: new Date(), welcome_email_sent_at: null };
+      const mockNewUser = {
+        id: 'uuid-123',
+        name,
+        email,
+        createdAt: new Date(),
+        welcome_email_sent_at: null,
+      };
 
-      mockedUserRepository.findByEmail.mockResolvedValue(null); 
-      mockedUserRepository.create.mockResolvedValue(mockNewUser); 
+      mockedUserRepository.findByEmail.mockResolvedValue(null);
+      mockedUserRepository.create.mockResolvedValue(mockNewUser);
 
       const result = await userService.create(name, email);
 
@@ -42,23 +51,30 @@ describe('User Service', () => {
 
       expect(mockedUserRepository.findByEmail).toHaveBeenCalledWith(email);
       expect(mockedUserRepository.create).toHaveBeenCalledWith({ name, email });
-      
+
       expect(mockChannel.sendToQueue).toHaveBeenCalledWith(
         'user-notifications-queue',
         expect.any(Buffer),
-        { persistent: true }
+        { persistent: true },
       );
     });
-
 
     it('should throw an error if the email is already in use', async () => {
       const name = 'Another User';
       const email = 'existing@example.com';
-      const mockExistingUser = { id: 'uuid-456', name: 'Existing', email, createdAt: new Date(), welcome_email_sent_at: null };
+      const mockExistingUser = {
+        id: 'uuid-456',
+        name: 'Existing',
+        email,
+        createdAt: new Date(),
+        welcome_email_sent_at: null,
+      };
 
       mockedUserRepository.findByEmail.mockResolvedValue(mockExistingUser);
 
-      await expect(userService.create(name, email)).rejects.toThrow('Email already in use.');
+      await expect(userService.create(name, email)).rejects.toThrow(
+        'Email already in use.',
+      );
 
       expect(mockedUserRepository.create).not.toHaveBeenCalled();
       expect(mockedRabbitmqConnection.createChannel).not.toHaveBeenCalled();

@@ -1,17 +1,17 @@
-import type { User } from "@prisma/client";
-import { userRepository } from "../repositories/user.repository";
-import { connection as rabbitmqConnection } from "../shared/lib/rabbitmq";
-import { logger } from "../shared/lib/logger";
-import type { Channel } from "amqplib";
+import type { User } from '@prisma/client';
+import { userRepository } from '../repositories/user.repository';
+import { connection as rabbitmqConnection } from '../shared/lib/rabbitmq';
+import { logger } from '../shared/lib/logger';
+import type { Channel } from 'amqplib';
 
-const NOTIFICATION_QUEUE = "user-notifications-queue";
-const DEAD_LETTER_QUEUE = "user-notifications-dlq";
+const NOTIFICATION_QUEUE = 'user-notifications-queue';
+const DEAD_LETTER_QUEUE = 'user-notifications-dlq';
 
 export const userService = {
   async create(name: string, email: string): Promise<User> {
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
-      throw new Error("Email already in use.");
+      throw new Error('Email already in use.');
     }
 
     const newUser = await userRepository.create({ name, email });
@@ -22,7 +22,7 @@ export const userService = {
           channel.assertQueue(DEAD_LETTER_QUEUE, { durable: true }),
           channel.assertQueue(NOTIFICATION_QUEUE, {
             durable: true,
-            deadLetterExchange: "",
+            deadLetterExchange: '',
             deadLetterRoutingKey: DEAD_LETTER_QUEUE,
           }),
         ]);
@@ -39,12 +39,12 @@ export const userService = {
       await channelWrapper.sendToQueue(
         NOTIFICATION_QUEUE,
         Buffer.from(message),
-        { persistent: true }
+        { persistent: true },
       );
 
       logger.info(`Message USER_CREATED sent to queue for user ${newUser.id}`);
     } catch (error) {
-      logger.error({ error }, "Failed to send USER_CREATED message to queue.");
+      logger.error({ error }, 'Failed to send USER_CREATED message to queue.');
     } finally {
       await channelWrapper.close();
     }
