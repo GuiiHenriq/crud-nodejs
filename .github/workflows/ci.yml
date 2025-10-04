@@ -1,35 +1,56 @@
 name: CI - Run Tests
 
-# --- Trigger ---
-# This workflow runs on pushes to the 'main' branch and on any pull request targeting the 'main' branch
+# Trigger
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
-# --- Jobs ---
-# A workflow is made up of one or more jobs that run in parallel or sequentially
+# Jobs
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    # --- NEW: Service Containers ---
+    # This starts a PostgreSQL container alongside our job
+    services:
+      postgres:
+        image: postgres:14-alpine
+        # Environment variables for the database container
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        # Health check to ensure the DB is ready before tests start
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
-      # Step 1: Check out the repository's code into the runner
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up the correct Node.js version
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
+      
+      # Step for Prisma Generate before installing dependencies
+      - name: Generate Prisma Client
+        run: npx prisma generate
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm ci
 
-      # Step 4: Run the tests
       - name: Run tests
+        # --- NEW: Environment Variables for the Test Step ---        env:
+          AMQP_URL: ${{ secrets.AMQP_URL }}
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+          DATABASE_URL: "postgresql://testuser:testpassword@localhost:5432/testdb"
         run: npm test
