@@ -1,21 +1,21 @@
 import express, { NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
 import { userRoutes } from './api/routes/user.routes';
 import { logger } from './shared/lib/logger';
 
 const app = express();
 
+app.use(helmet());
 app.use(express.json());
 app.use('/api', userRoutes);
 
-app.use(
-  (error: Error, request: Request, response: Response, _next: NextFunction) => {
-    logger.error(error, 'Unhandled error occurred!');
+app.use((error: Error, request: Request, response: Response, _next: NextFunction) => {
+  logger.error({ error }, 'Unhandled error occurred!');
 
-    return response.status(500).json({
-      status: 'error',
-      message: 'Internal server error',
-    });
-  },
-);
+  return response.status(500).json({
+    status: 'error',
+    message: 'Internal server error',
+  });
+});
 
 export { app };
