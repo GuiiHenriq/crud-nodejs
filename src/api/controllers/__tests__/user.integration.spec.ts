@@ -2,6 +2,12 @@ import request from 'supertest';
 import { app } from '../../../app';
 import { prisma } from '../../../shared/lib/prisma';
 
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+}
+
 describe('POST /api/users', () => {
   beforeEach(async () => {
     await prisma.user.deleteMany({});
@@ -19,9 +25,11 @@ describe('POST /api/users', () => {
 
     const response = await request(app).post('/api/users').send(userData);
 
+    const responseBody = response.body as UserResponse;
+
     expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty('id');
-    expect(response.body.name).toBe(userData.name);
+    expect(responseBody).toHaveProperty('id');
+    expect(responseBody.name).toBe(userData.name);
 
     const userInDb = await prisma.user.findUnique({
       where: { email: userData.email },

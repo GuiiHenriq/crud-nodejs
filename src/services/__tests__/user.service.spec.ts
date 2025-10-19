@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+
 import { userService } from '../user.service';
 import { userRepository } from '../../repositories/user.repository';
 import { connection as rabbitmqConnection } from '../../shared/lib/rabbitmq';

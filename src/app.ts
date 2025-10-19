@@ -8,7 +8,7 @@ app.use(express.json());
 app.use('/api', userRoutes);
 
 app.use(
-  (error: Error, request: Request, response: Response, next: NextFunction) => {
+  (error: Error, request: Request, response: Response, _next: NextFunction) => {
     logger.error(error, 'Unhandled error occurred!');
 
     return response.status(500).json({
